@@ -1,0 +1,12 @@
+剧单工作台 — 轻量版第三方软件说明
+
+本程序包含 Python、Tcl/Tk、Pillow、openpyxl、et-xmlfile 和 PyInstaller 引导程序。
+各软件以 licenses 内对应许可证为准；Pillow 许可证包含其图像编解码组件说明。
+程序包不含 Node.js、Playwright、浏览器、FFmpeg、ASR/OpenCV 运行库或模型。
+外置依赖需另行安装并保留各自发行版许可证；详见轻量版依赖安装说明.txt。
+
+Python 3.12.0
+PyInstaller 6.22.3
+Pillow 12.3.0
+openpyxl 3.1.5
+et-xmlfile 2.0.0

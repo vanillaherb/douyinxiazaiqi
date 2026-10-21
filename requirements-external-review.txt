@@ -1,0 +1,11 @@
+# External recognition environment only: Windows x64 / CPython 3.12.
+# Install into the EXE-adjacent dependencies directory, not into the program.
+# These versions match the project's existing local-review toolchain.
+numpy==2.3.5
+faster-whisper==1.2.1
+ctranslate2==4.8.0
+av==17.1.0
+onnxruntime==1.20.1
+tokenizers==0.23.1
+huggingface-hub==1.13.0
+opencv-contrib-python==4.10.0.84

@@ -1,0 +1,149 @@
+剧单工作台 · 轻量版依赖安装说明
+适用：Windows 10/11 x64；本次程序版本见构建清单.json。
+
+一、交付给别人什么
+
+发送本轻量包即可，包含一个“剧单工作台.exe”、本说明、给AI的安装任务、
+依赖版本清单和许可证。程序自带启动所需的小型Python/Tk、图片与表格组件。
+不包含Node.js、Playwright、FFmpeg、识别Python环境、语音模型或用户视频。
+不需要对方安装Python来打开界面；Python仅用于可选的本地广告语音/二维码检查。
+
+第一次启动会显示缺少哪些组件。没有安装依赖时，可以打开界面、查看新手指引；
+下载、视频检测、网页上传和对应广告检查需在依赖安装后使用。
+轻量包把下载量移到了使用者电脑，完整功能仍然需要下载这些组件并占用磁盘。
+
+最省事的安装方法：把“给AI的轻量版安装任务.txt”与本说明一起交给能操作电脑的AI，
+再告诉它“剧单工作台.exe”所在文件夹。只需安装一次，之后重新打开软件即可。
+AI没有电脑/命令执行权限时，可以让它指导你执行下列安装步骤。
+
+二、统一目录（在实际EXE旁边创建，不要放进临时解压目录）
+
+  任意可写文件夹\
+    剧单工作台.exe
+    requirements-external-review.txt
+    依赖\
+      node\node.exe
+      node\npm.cmd
+      node\node_modules\playwright\package.json
+      node\node_modules\playwright-core\package.json
+      bin\ffmpeg.exe
+      bin\ffprobe.exe
+      review-venv\Scripts\python.exe
+      models\faster-whisper-small\config.json
+      models\faster-whisper-small\model.bin
+      models\faster-whisper-small\tokenizer.json
+      models\faster-whisper-small\vocabulary.txt
+
+Node的便携包完整内容、npm及第三方许可证都保留在node文件夹。
+FFmpeg发行包的LICENSE、README等保留到“依赖\licenses\FFmpeg”。
+模型的README、许可和下载来源保留在模型目录，不改写模型文件。
+后续移动软件时，依赖中的Python虚拟环境可能需要在新位置重建，不能只移动EXE。
+不要把“依赖”放在PyInstaller的_MEI开头临时文件夹里，该目录关闭程序后会消失。
+
+三、安装下载、检测和网页上传所需组件
+
+1. Chrome
+   使用电脑已有的Google Chrome；没有时从Google官方安装。
+   软件使用Chrome通道，无需另下载Playwright整套Chromium/Firefox/WebKit。
+   红果配套扩展由程序“连接原红果窗口”入口导出，按界面提示手动加载。
+   不复制别人的浏览器登录、Cookie、个人资料或连接码。
+   来源：https://www.google.com/chrome/
+
+2. Node.js与Playwright
+   从 https://nodejs.org/en/download 下载当前受支持的Windows x64 LTS便携ZIP。
+   使用Node 22或24的受支持版本；最低要求20。核对官方SHASUMS后解压，
+   把完整文件内容放入“依赖\node”，不要多嵌套一层node-v...文件夹。
+   在软件文件夹的PowerShell中执行以下命令；命令中的$AppDir应先改成实际目录：
+
+     $AppDir = 'C:\工具\剧单工作台'
+     $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = '1'
+     $env:PATH = (Join-Path $AppDir '依赖\node') + ';' + $env:PATH
+     & (Join-Path $AppDir '依赖\node\npm.cmd') install --registry=https://registry.npmjs.org --prefix (Join-Path $AppDir '依赖\node') --save-exact playwright@1.62.1 playwright-core@1.62.1
+
+   仅使用官方npm注册表的这两个同版本包，不安装@playwright/test或额外浏览器。
+   安装完核对两个package.json均为1.62.1；保存package-lock.json。
+   说明：https://playwright.dev/docs/library
+
+3. FFmpeg与FFprobe
+   项目入口：https://ffmpeg.org/download.html
+   Windows发行来源：https://www.gyan.dev/ffmpeg/builds/
+   下载release essentials的Windows x64静态发行包，并核对该站SHA-256。
+   从同一个发行包取bin\ffmpeg.exe和bin\ffprobe.exe，放到“依赖\bin”。
+   不混用不同发行版，不要只取shared发行版的两个EXE而漏掉DLL。
+   本程序当前剪辑采用通用CPU编码路径；不要承诺任意发行版支持所有显卡编码器。
+
+装完前面三项即可测试下载和视频检测；本地广告检查的ASR/二维码还需下一节。
+
+四、安装本地广告检查组件
+
+1. 在电脑上使用官方CPython 3.12 x64。已有兼容安装可复用；不要改动其他软件环境。
+   下载入口：https://www.python.org/downloads/windows/
+   新电脑优先用官方Python安装管理器安装3.12，不必安装CUDA、PyTorch或GPU工具包。
+   如果运行CTranslate2提示缺少MSVC DLL，再按微软官方说明安装Visual C++ x64运行库。
+   来源：https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist
+
+2. 在软件实际目录的PowerShell中创建独立环境（不要用--system-site-packages）：
+
+     $AppDir = 'C:\工具\剧单工作台'
+     py -3.12 -m venv (Join-Path $AppDir '依赖\review-venv')
+     & (Join-Path $AppDir '依赖\review-venv\Scripts\python.exe') -m pip --isolated install --index-url https://pypi.org/simple --only-binary=:all: -r (Join-Path $AppDir 'requirements-external-review.txt')
+
+   上述文件固定本项目已使用的版本。若某版本下载失败或无Windows x64 wheel，
+   先说明失败原因；不要静默换模型、换大版本或安装整个深度学习训练环境。
+   用CPU/int8运行，识别组件与模型在本机执行，不调用付费AI接口。
+
+3. 下载已转换的small模型，不自己训练/转换：
+   来源：https://huggingface.co/Systran/faster-whisper-small
+   在软件文件夹的PowerShell中执行（需要先完成上一项）：
+
+     $AppDir = 'C:\工具\剧单工作台'
+     $ModelDir = Join-Path $AppDir '依赖\models\faster-whisper-small'
+     & (Join-Path $AppDir '依赖\review-venv\Scripts\python.exe') -c "import sys; from huggingface_hub import snapshot_download; snapshot_download(repo_id='Systran/faster-whisper-small', local_dir=sys.argv[1], allow_patterns=['config.json','model.bin','tokenizer.json','vocabulary.txt','README.md','LICENSE*'])" $ModelDir
+
+   至少核对config.json、model.bin、tokenizer.json、vocabulary.txt均为完整非空文件。
+   不要把网页HTML、Git LFS指针文本或未完成的临时文件当成模型。模型约数百MB。
+   依赖已安装后，程序只读取本地文件；不会在启动时自动补下模型。
+   识别项目：https://github.com/SYSTRAN/faster-whisper
+   下载说明：https://huggingface.co/docs/huggingface_hub/guides/download
+
+4. 画面文字OCR使用Windows内置能力。
+   如缺中文OCR，请在Windows“设置 → 时间和语言 → 语言和区域”中检查简体中文的
+   可选语言组件；先确认程序实际报错，再由用户安装缺少的组件。不要下载第三方OCR软件包。
+   不需要为安装本软件关闭杀毒软件、改变Chrome安全策略或修改系统执行策略。
+
+五、安装验收（不登录、不上传、不发布）
+
+关闭正在运行的轻量EXE，再在PowerShell里检查：
+
+  $AppDir = 'C:\工具\剧单工作台'
+  & (Join-Path $AppDir '依赖\node\node.exe') --version
+  & (Join-Path $AppDir '依赖\node\node.exe') -e "const p=require('path'); for(const n of ['playwright','playwright-core']) console.log(n,require(p.join(process.argv[1],n,'package.json')).version)" (Join-Path $AppDir '依赖\node\node_modules')
+  & (Join-Path $AppDir '依赖\bin\ffmpeg.exe') -version
+  & (Join-Path $AppDir '依赖\bin\ffprobe.exe') -version
+  & (Join-Path $AppDir '依赖\review-venv\Scripts\python.exe') -c "import struct,faster_whisper,cv2,numpy,ctranslate2; assert struct.calcsize('P')==8; print('识别依赖已加载')"
+
+再运行EXE自检；建议使用临时验收目录，避免混入真实视频、账号和上传队列：
+
+  $CheckDir = Join-Path $AppDir '安装验收'
+  New-Item -ItemType Directory -Force -Path $CheckDir | Out-Null
+  $CheckProcess = Start-Process -FilePath (Join-Path $AppDir '剧单工作台.exe') -ArgumentList ('--workspace "' + (Join-Path $CheckDir '工作区') + '" --download-workspace "' + (Join-Path $CheckDir '下载工作区') + '" --session-root "' + (Join-Path $CheckDir '会话') + '" --self-check-output "' + (Join-Path $CheckDir '环境检查.json') + '"') -WindowStyle Hidden -PassThru -Wait
+  Get-Content -LiteralPath (Join-Path $CheckDir '环境检查.json') -Raw -Encoding UTF8
+
+检查download.node_available、download.ffprobe_available和local_chain_ready；
+完整广告检查还应核对外置识别环境、模型和中文OCR实际可用，不能只看文件夹存在。
+没连接浏览器时automatic_upload_ready可能为false，这不等于依赖安装失败。
+尚未装外置组件时，自检返回缺项或退出码2是预期结果，不代表软件启动崩溃。
+最后用一段由用户指定的测试视频执行本地检查，确认转写、抽帧、OCR、二维码各自状态。
+安装验收不授权登录、读取Cookie、启动真实下载队列、上传素材或点击发布。
+
+六、常见问题
+
+• 能打开，但提示运行环境未就绪：核对依赖目录位置及文件名，再重新打开软件。
+• 找不到Playwright：确认是“依赖\node\node_modules”，两个包版本完全相同。
+• 找不到Chrome：Chrome通道使用系统Chrome，不是仅下载一个Chromium就能替代。
+• 有模型却不能转写：还需review-venv中的faster-whisper及其原生依赖；单独下载模型不够。
+• 网络超时：说明具体失败来源和文件，稍后断点重试；不要换来路不明的整合包。
+• 识别无命中：自动检查只提供线索，不等于没有广告；原片内容和集序仍需人工确认。
+
+本说明仅安排安装外部公开软件与模型，不提供用户账号、密码、Cookie、个人剧单或视频。
+安装来源与说明核对日期：2026-10-21。依赖下载地址和官方页面可能更新，应以同源官方信息核对。
